@@ -7,6 +7,13 @@ const NotFoundError = require('../errors/NotFoundError');
 const BadRequestError = require('../errors/BadRequestError');
 const ConflictError = require('../errors/ConflictError');
 const UnauthorizedError = require('../errors/UnauthorizedError');
+const {
+  BR_ERR,
+  C_ERR,
+  IS_ERR,
+  NFU_ERR,
+  U_ERR,
+} = require('../utils/contants');
 
 module.exports.createUser = async (req, res, next) => {
   const {
@@ -22,12 +29,12 @@ module.exports.createUser = async (req, res, next) => {
     });
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return next(new BadRequestError('Переданы некорректные данные'));
+      return next(new BadRequestError(BR_ERR));
     }
     if (err.code === 11000) {
-      return next(new ConflictError('Пользователь с таким Email уже существует'));
+      return next(new ConflictError(C_ERR));
     }
-    return next(new InternalServerError('Произошла ошибка на сервере'));
+    return next(new InternalServerError(IS_ERR));
   }
 };
 
@@ -35,11 +42,11 @@ module.exports.getUserMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user._id);
     if (!user) {
-      return next(new NotFoundError('Запрашиваемый пользователь не найден'));
+      return next(new NotFoundError(NFU_ERR));
     }
     return res.send(user);
   } catch {
-    return next(new InternalServerError('Произошла ошибка на сервере'));
+    return next(new InternalServerError(IS_ERR));
   }
 };
 
@@ -52,14 +59,17 @@ module.exports.updateUser = async (req, res, next) => {
       { new: true, runValidators: true },
     );
     if (!user) {
-      return next(new NotFoundError('Запрашиваемый пользователь не найден'));
+      return next(new NotFoundError(NFU_ERR));
     }
     return res.send(user);
   } catch (err) {
     if (err.name === 'ValidationError') {
-      return next(new BadRequestError('Переданы некорректные данные'));
+      return next(new BadRequestError(BR_ERR));
     }
-    return next(new InternalServerError('Произошла ошибка на сервере'));
+    if (err.code === 11000) {
+      return next(new ConflictError(C_ERR));
+    }
+    return next(new InternalServerError(IS_ERR));
   }
 };
 
@@ -68,11 +78,11 @@ module.exports.login = async (req, res, next) => {
   try {
     const user = await User.findOne({ email }).select('+password');
     if (!user) {
-      return next(new UnauthorizedError('Неправильные почта или пароль'));
+      return next(new UnauthorizedError(U_ERR));
     }
     const comparePassword = await bcrypt.compare(password, user.password);
     if (!comparePassword) {
-      return next(new UnauthorizedError('Неправильные почта или пароль'));
+      return next(new UnauthorizedError(U_ERR));
     }
     const token = jwt.sign({ _id: user._id }, NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret');
     res.cookie('jwt', token, {

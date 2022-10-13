@@ -4,22 +4,33 @@ const cors = require('cors');
 const express = require('express');
 const mongoose = require('mongoose');
 const cookieParser = require('cookie-parser');
-
-const { PORT = 3000 } = process.env;
-const app = express();
+const helmet = require('helmet');
 
 const { NODE_ENV, URL_DB } = process.env;
 const { errors } = require('celebrate');
 const { requestLogger, errorLogger } = require('./middlewares/logger');
 const router = require('./routes/index');
+const { handlerErrors } = require('./middlewares/handlerErrors');
+const { limiter } = require('./middlewares/limiter');
 
 const NotFoundError = require('./errors/NotFoundError');
+const {
+  MONGO_DB,
+  FRONTEND_URL,
+  PORT_BACKEND,
+  NF_ERR,
+} = require('./utils/contants');
 
+const { PORT = PORT_BACKEND } = process.env;
+const app = express();
+
+app.use(limiter);
+app.use(helmet());
 app.use(express.json());
 app.use(cookieParser());
 app.use(
   cors({
-    origin: 'https://nmg.nomoredomains.club',
+    origin: FRONTEND_URL,
     credentials: true,
   }),
 );
@@ -34,28 +45,17 @@ app.use(requestLogger);
 
 app.use(router);
 
-app.use((req, res, next) => next(new NotFoundError('Запрашиваемая страница не найдена')));
+app.use((req, res, next) => next(new NotFoundError(NF_ERR)));
 
 app.use(errorLogger);
 
 app.use(errors());
 
-app.use((err, req, res, next) => {
-  const { statusCode = 500, message } = err;
-
-  res
-    .status(statusCode)
-    .send({
-      message: statusCode === 500
-        ? 'Произошла ошибка на сервере'
-        : message,
-    });
-  next(err);
-});
+app.use(handlerErrors);
 
 async function main() {
   try {
-    await mongoose.connect(NODE_ENV === 'production' ? URL_DB : 'mongodb://localhost:27017/bitfilmsdb', {
+    await mongoose.connect(NODE_ENV === 'production' ? URL_DB : MONGO_DB, {
       useNewUrlParser: true,
       useUnifiedTopology: false,
     });
