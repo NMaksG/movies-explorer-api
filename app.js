@@ -13,17 +13,16 @@ const router = require('./routes/index');
 const { handlerErrors } = require('./middlewares/handlerErrors');
 const { limiter } = require('./middlewares/limiter');
 
-const NotFoundError = require('./errors/NotFoundError');
 const {
   MONGO_DB,
   FRONTEND_URL,
   PORT_BACKEND,
-  NF_ERR,
 } = require('./utils/contants');
 
 const { PORT = PORT_BACKEND } = process.env;
 const app = express();
 
+app.use(requestLogger);
 app.use(limiter);
 app.use(helmet());
 app.use(express.json());
@@ -35,8 +34,6 @@ app.use(
   }),
 );
 
-app.use(requestLogger);
-
 // app.get('/crash-test', () => {
 //   setTimeout(() => {
 //     throw new Error('Сервер сейчас упадёт');
@@ -44,8 +41,6 @@ app.use(requestLogger);
 // });
 
 app.use(router);
-
-app.use((req, res, next) => next(new NotFoundError(NF_ERR)));
 
 app.use(errorLogger);
 

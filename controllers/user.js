@@ -13,6 +13,7 @@ const {
   IS_ERR,
   NFU_ERR,
   U_ERR,
+  cookieDel,
 } = require('../utils/contants');
 
 module.exports.createUser = async (req, res, next) => {
@@ -101,7 +102,7 @@ module.exports.login = async (req, res, next) => {
 module.exports.deleteCookie = async (req, res, next) => {
   try {
     await res.clearCookie('jwt');
-    return res.send({ message: 'Куки удалены' });
+    return res.send({ message: cookieDel });
   } catch (err) {
     return next(err);
   }

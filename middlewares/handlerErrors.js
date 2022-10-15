@@ -1,3 +1,5 @@
+const { messageHenErr } = require('../utils/contants');
+
 module.exports.handlerErrors = (err, req, res, next) => {
   const { statusCode = 500, message } = err;
 
@@ -5,7 +7,7 @@ module.exports.handlerErrors = (err, req, res, next) => {
     .status(statusCode)
     .send({
       message: statusCode === 500
-        ? 'Произошла ошибка на сервере'
+        ? messageHenErr
         : message,
     });
   next(err);
