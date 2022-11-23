@@ -1,6 +1,8 @@
 const MONGO_DB = 'mongodb://localhost:27017/moviesdb';
-const FRONTEND_URL = 'https://nmg-diploma.nomoredomains.icu';
-const PORT_BACKEND = 3000;
+// const FRONTEND_URL = 'https://nmg-diploma.nomoredomains.icu';
+const FRONTEND_URL = 'http://localhost:3000';
+const PORT_BACKEND = 3001;
+// const PORT_BACKEND = 3000;
 const NF_ERR = 'Запрашиваемая страница не найдена';
 const U_ERR = 'Неправильные почта или пароль';
 const U_A_ERR = 'Необходима авторизация';
